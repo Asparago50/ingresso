@@ -12,3 +12,4 @@ cd ~/ingresso
 git clone <repo-url> EntrataMerci
 cd EntrataMerci
 docker-compose up -d
+# ingresso
