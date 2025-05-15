@@ -1,0 +1,48 @@
+<!-- ingresso/EntrataMerci/app/templates/registration/login.html -->
+{% extends "base.html" %} <!-- O il tuo template base, es. "inventory/base_app_inventory_templates.html" se quello è il vero base -->
+{% load crispy_forms_tags %}
+
+{% block title %}Login{% endblock title %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title text-center">Login</h3>
+                </div>
+                <div class="card-body">
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Il tuo username e password non corrispondono. Riprova.
+                        </div>
+                    {% endif %}
+
+                    {% if next %}
+                        {% if user.is_authenticated %}
+                        <p class="alert alert-warning">Il tuo account non ha accesso a questa pagina. Per procedere,
+                        effettua il login con un account che abbia i permessi necessari.</p>
+                        {% else %}
+                        <p class="alert alert-info">Effettua il login per vedere questa pagina.</p>
+                        {% endif %}
+                    {% endif %}
+
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary mt-3">Login</button>
+                        </div>
+                        <input type="hidden" name="next" value="{{ next }}">
+                    </form>
+                </div>
+                <!-- Opzionale: link per recupero password o registrazione, se applicabile -->
+                <!-- <div class="card-footer text-center">
+                    <p><a href="#">Password dimenticata?</a></p>
+                </div> -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

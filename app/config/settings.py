@@ -98,3 +98,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # django-import-export settings (opzionale)
 IMPORT_EXPORT_USE_TRANSACTIONS = True
+
+# AUTHENTICATION SETTINGS
+LOGIN_URL = 'login'  # Nome dell'URL pattern per la vista di login
+LOGIN_REDIRECT_URL = 'inventory:inventory_list' # Dove reindirizzare dopo login (assumendo che 'inventory_list' sia la tua lista principale nell'app 'inventory')
+LOGOUT_REDIRECT_URL = 'login' # Dove reindirizzare dopo il logout
+
+# CRISPY FORMS (se non già impostato bene)
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
