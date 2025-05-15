@@ -1,45 +1,59 @@
 <!DOCTYPE html>
-{% load static %}
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Entrata Merci{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <!-- Includi Bootstrap CSS o il tuo CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}"> <!-- Se hai stili custom -->
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <header>
-        <h1>{% block page_title %}Gestione Entrata Merci{% endblock %}</h1>
-        <nav>
-            <a href="{% url 'inventory:lista' %}">Elenco Movimenti in ingressi al Magazzino -- CONFERIMENTI --</a> |
-            <a href="{% url 'inventory:new' %}">Nuovo Conferimento</a> |
-            <a href="{% url 'inventory:upload_file' %}">Importa Elenco Conferimenti</a> | {# <--- MODIFICATO QUI #}
-            <a href="{% url 'inventory:articolo-export' %}">Esporta Elenco Conferimenti</a>
-            {% if user.is_authenticated %}
-                 | <a href="{% url 'admin:index' %}">Admin</a>
-                 (Utente: {{ user.username }})
-            {% endif %}
-        </nav>
-    </header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'inventory:inventory_list' %}{% else %}{% url 'login' %}{% endif %}">Gestione Inventario</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <span class="navbar-text me-3">
+                                Ciao, {{ user.username }}
+                                {% if user.is_superuser or "Database Administrators" in user.groups.all.0.name %}
+                                (Admin)
+                                {% elif "Database Viewers" in user.groups.all.0.name %}
+                                (Viewer)
+                                {% endif %}
+                            </span>
+                        </li>
+                        {% if perms.inventory.add_articolo %} <!-- SOSTITUISCI 'articolo' -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'inventory:inventory_create' %}">Aggiungi Articolo</a> <!-- SOSTITUISCI -->
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-    <main class="container">
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|safe }}</li> {# Aggiunto |safe se i messaggi contengono HTML #}
-                {% endfor %}
-            </ul>
-        {% endif %}
+    <div class="container">
         {% block content %}
-        <!-- Il contenuto specifico della pagina andrà qui -->
         {% endblock %}
-    </main>
+    </div>
 
-    <footer>
-        <p>© {% now "Y" %} Tuo Nome/Azienda</p>
-    </footer>
-
-    {% block extra_js %}{% endblock %}
+    <!-- Includi Bootstrap JS o il tuo JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>
