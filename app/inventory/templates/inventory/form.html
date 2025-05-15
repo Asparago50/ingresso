@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>{% if object %}Modifica{% else %}Nuovo{% endif %} Articolo</h2>
+  <form method="post" class="form-container">{% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn-primary" type="submit">Salva</button>
+    <a class="btn-secondary" href="{% url 'inventory:lista' %}">Annulla</a>
+  </form>
+{% endblock %}

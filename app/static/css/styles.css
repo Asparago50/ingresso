@@ -1,0 +1,126 @@
+/* colori di sfondo e testo */
+body {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  header, footer {
+    background-color: #1e1e1e;
+    padding: 1rem;
+    text-align: center;
+  }
+  
+  header h1, footer p {
+    margin: 0;
+    color: #a5d6a7; /* verde tenue */
+  }
+  
+  /* bottoni */
+  .btn, .btn-primary, .btn-secondary {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    text-decoration: none;
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .btn {
+    background-color: #2e2e2e;
+    color: #e0e0e0;
+    border: 1px solid #3f3f3f;
+  }
+  
+  .btn:hover {
+    background-color: #3f3f3f;
+  }
+  
+  .btn-primary {
+    background-color: #388e3c; /* verde scuro */
+    color: #ffffff;
+    border: none;
+  }
+  
+  .btn-primary:hover {
+    background-color: #2e7d32;
+  }
+  
+  .btn-secondary {
+    background-color: #616161; /* grigio scuro */
+    color: #ffffff;
+    border: none;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #424242;
+  }
+  
+  /* tabelle */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+  }
+  
+  .data-table th, .data-table td {
+    border: 1px solid #333333;
+    padding: 0.5rem;
+    text-align: left;
+  }
+  
+  .data-table th {
+    background-color: #1e1e1e;
+    color: #a5d6a7;
+  }
+  
+  .data-table tr:nth-child(even) {
+    background-color: #1a1a1a;
+  }
+  
+  /* link */
+  a.link {
+    color: #81c784; /* verde chiaro */
+    text-decoration: none;
+  }
+  
+  a.link:hover {
+    text-decoration: underline;
+  }
+  
+  /* form */
+  .form-container {
+    background-color: #1e1e1e;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    max-width: 600px;
+    margin: auto;
+  }
+  
+  .form-container input, .form-container select, .form-container textarea {
+    width: 100%;
+    background-color: #2e2e2e;
+    border: 1px solid #333333;
+    color: #e0e0e0;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border-radius: 0.25rem;
+  }
+  
+  .pagination {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .pagination a {
+    margin: 0 0.5rem;
+    color: #81c784;
+    text-decoration: none;
+  }
+  
+  .pagination span {
+    color: #e0e0e0;
+  }
+  

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static %} <!-- Già in base.html, ma non fa male ripeterlo -->
+{% load l10n %} <!-- Per localizzare numeri/decimali -->
+
+{% block title %}Elenco Articoli - {{ block.super }}{% endblock %}
+
+{% block content %}
+  <h2>Elenco dei prodotti in ingresso in sequenza di arrivo</h2>
+
+  <div class="toolbar">
+    <a class="btn btn-primary" href="{% url 'inventory:new' %}">Nuovo Articolo</a>
+    <!-- metto i link di import/export qui -->
+    <a class="btn btn-secondary" href="{% url 'inventory:upload_file' %}">Importa Articoli</a>
+    <a class="btn btn-secondary" href="{% url 'inventory:articolo-export' %}">Esporta Articoli</a>
+  </div>
+
+  {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if articoli %}
+  <div class="table-responsive"> <!-- Rende la tabella scrollabile su schermi piccoli -->
+    <table class="data-table">
+      <thead>
+        <tr>
+          <!-- Aggiorna gli header per corrispondere ai dati mostrati -->
+          <th>ID</th>
+          <th>Codice Articolo</th>
+          <th>Descrizione</th>
+          <th>UM</th>
+          <th>Data Conf.</th>
+          <th>Q.tà Conf.</th>
+          <th>Attivo</th>
+          <th>Azioni</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for art in articoli %}
+        <tr>
+          <td>{{ art.numero_sequenziale }}</td>
+          <td>{{ art.codice_articolo }}</td>
+          <td>{{ art.descrizione|truncatewords:10 }}</td> <!-- Tronca descrizioni lunghe -->
+          <td>{{ art.um }}</td>
+          <td>{{ art.data_conferimento|date:"d/m/Y" }}</td> <!-- Formatta la data -->
+          <td style="text-align: right;">{{ art.quantita_conferita|unlocalize }}</td> <!-- Allinea e formatta numeri -->
+          <td>{{ art.attivo|yesno:"Sì,No,?" }}</td> <!-- Mostra Sì/No per booleano -->
+          <td>
+            <a class="link" href="{% url 'inventory:edit' art.pk %}">Modifica</a>
+            <!-- Aggiungi link per dettagli o elimina se necessario -->
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p>Nessun articolo trovato.</p>
+  {% endif %}
+
+  {% if is_paginated %}
+    <div class="pagination">
+      <span class="step-links">
+        {% if page_obj.has_previous %}
+          <a href="?page=1">« prima</a>
+          <a href="?page={{ page_obj.previous_page_number }}">precedente</a>
+        {% endif %}
+
+        <span class="current">
+          Pagina {{ page_obj.number }} di {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}">successiva</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}">ultima »</a>
+        {% endif %}
+      </span>
+    </div>
+  {% endif %}
+
+{% endblock %}

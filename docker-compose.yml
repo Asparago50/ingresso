@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: ./app
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./app:/app
+      - static_volume:/app/staticfiles
+    expose:
+      - 8000
+    depends_on:
+      db:
+        condition: service_healthy
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3
+
+  nginx:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - static_volume:/vol/static
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+  static_volume:

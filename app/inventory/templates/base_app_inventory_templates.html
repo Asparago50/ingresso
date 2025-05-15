@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+{% load static %} <!-- Aggiungi questo per usare il tag {% static %} -->
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Per mobile -->
+  <title>{% block title %}Entrata Merci{% endblock %}</title> <!-- Titolo dinamico -->
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  {% block extra_head %}{% endblock %} <!-- Per CSS/JS specifici della pagina -->
+</head>
+<body>
+  <header>
+      <h1>Gestione Entrata Merci</h1>
+      <!-- Aggiungi navigazione se serve -->
+  </header>
+
+  <main class="container"> <!-- Contenitore principale -->
+    {% block content %}
+    <!-- Il contenuto specifico della pagina andrà qui -->
+    {% endblock %}
+  </main>
+
+  <footer>
+      <p>© {% now "Y" %} Tuo Nome/Azienda</p>
+  </footer>
+
+  {% block extra_js %}{% endblock %} <!-- Per JS specifici alla fine del body -->
+</body>
+</html>

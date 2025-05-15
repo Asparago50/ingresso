@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load inventory_extras %}
+
+{% block title %}{{ title }} - {{ block.super }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <p>Mappa le colonne del tuo file ai campi del database per l'articolo.</p>
+  <p>Per i campi non mappati, verranno usati i valori di default del modello (se definiti) o potrebbero causare errori se il campo è obbligatorio.</p>
+  
+  <form method="post" class="form-container">
+    {% csrf_token %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Campo del Database (Articolo)</th>
+          <th>Mappa dalla Colonna del File Caricato</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for model_field in model_fields %}
+          <tr>
+            <td>
+              <label for="map_{{ model_field }}">{{ model_field|capfirst }}</label>
+            </td>
+            <td>
+              <select name="map_{{ model_field }}" id="map_{{ model_field }}">
+                <option value="IGNORE">-- Ignora questo campo --</option>
+                {% for file_col in file_columns %}
+                  <option value="{{ file_col }}" 
+                          {% if model_field == file_col|lower|slugify|replace_char:"-_" or model_field == file_col|lower|replace_char:" _" %}selected{% endif %}> 
+                          {# Prova a pre-selezionare se i nomi sono simili #}
+                    {{ file_col }}
+                  </option>
+                {% endfor %}
+              </select>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <br>
+    <button type="submit" class="btn-primary">Procedi con l'Importazione</button>
+    <a href="{% url 'inventory:upload_file' %}" class="btn-secondary">Annulla e Ricarica File</a>
+  </form>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title|default:"Importa" }} - {{ block.super }}{% endblock %}
+{% block page_title %}{{ title|default:"Importa Articoli" }}{% endblock %}
+
+{% block content %}
+  <form method="post" enctype="multipart/form-data" class="form-container">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn-primary">Importa File</button>
+    <a class.btn.btn-secondary href="{% url 'inventory:lista' %}">Annulla</a>
+  </form>
+{% endblock %}

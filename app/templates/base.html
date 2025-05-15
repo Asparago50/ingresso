@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Entrata Merci{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <h1>{% block page_title %}Gestione Entrata Merci{% endblock %}</h1>
+        <nav>
+            <a href="{% url 'inventory:lista' %}">Elenco Movimenti in ingressi al Magazzino -- CONFERIMENTI --</a> |
+            <a href="{% url 'inventory:new' %}">Nuovo Conferimento</a> |
+            <a href="{% url 'inventory:upload_file' %}">Importa Elenco Conferimenti</a> | {# <--- MODIFICATO QUI #}
+            <a href="{% url 'inventory:articolo-export' %}">Esporta Elenco Conferimenti</a>
+            {% if user.is_authenticated %}
+                 | <a href="{% url 'admin:index' %}">Admin</a>
+                 (Utente: {{ user.username }})
+            {% endif %}
+        </nav>
+    </header>
+
+    <main class="container">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|safe }}</li> {# Aggiunto |safe se i messaggi contengono HTML #}
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% block content %}
+        <!-- Il contenuto specifico della pagina andrà qui -->
+        {% endblock %}
+    </main>
+
+    <footer>
+        <p>© {% now "Y" %} Tuo Nome/Azienda</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
