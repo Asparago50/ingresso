@@ -1,17 +1,26 @@
+# EntrataMerci/app/inventory/urls.py
 from django.urls import path
-from . import views 
+from . import views
 
-app_name = 'inventory'
+app_name = 'inventory' # <<<< NECESSARIO per il namespacing (es. 'inventory:articolo_list')
 
 urlpatterns = [
-    path('', views.ArticoloListView.as_view(), name='lista'),
-    path('articolo/add/', views.ArticoloCreateView.as_view(), name='new'),
-    path('articolo/<int:pk>/edit/', views.ArticoloUpdateView.as_view(), name='edit'),
+    path('', views.home_inventory, name='home_inventory'), # Home page dell'inventario
 
-    # Flusso di importazione a più passaggi
-    path('import/upload/', views.upload_file_view, name='upload_file'), # Vecchia 'articolo-import' ora è 'upload_file'
-    path('import/map/', views.map_columns_view, name='map_columns'),
-    path('import/process/', views.process_import_view, name='process_import'),
-    
-    path('export/', views.export_articoli, name='articolo-export'),
+    # URL per Articolo
+    path('articoli/', views.ArticoloListView.as_view(), name='articolo_list'),
+    path('articoli/create/', views.ArticoloCreateView.as_view(), name='articolo_create'),
+    path('articoli/<int:pk>/update/', views.ArticoloUpdateView.as_view(), name='articolo_update'),
+    path('articoli/<int:pk>/delete/', views.ArticoloDeleteView.as_view(), name='articolo_delete'),
+    path('articoli/import/', views.import_articoli, name='articolo_import'),
+    path('articoli/export/', views.export_articoli, name='articolo_export'),
+
+    # Aggiungi qui URL simili per Deposito:
+    # path('depositi/', views.DepositoListView.as_view(), name='deposito_list'),
+    # path('depositi/create/', views.DepositoCreateView.as_view(), name='deposito_create'),
+    # ... e così via per update, delete, import, export
+
+    # Aggiungi qui URL simili per Posizione:
+    # path('posizioni/', views.PosizioneListView.as_view(), name='posizione_list'),
+    # ... e così via
 ]

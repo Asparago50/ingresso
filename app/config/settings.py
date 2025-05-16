@@ -107,3 +107,32 @@ LOGOUT_REDIRECT_URL = 'login' # Dove reindirizzare dopo il logout
 # CRISPY FORMS (se non già impostato bene)
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# https://docs.djangoproject.com/en/5.0/howto/static-files/
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles' # Raccolta per la produzione
+STATICFILES_DIRS = [
+    BASE_DIR / "static", # La tua cartella 'app/static'
+]
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'mediafiles' # Dove vengono caricati i file (es. foto profili)
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# CRISPY FORMS
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# DJANGO IMPORT EXPORT
+IMPORT_EXPORT_USE_TRANSACTIONS = True # Buona pratica
+
+# AUTHENTICATION SETTINGS
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'inventory:home_inventory' # Reindirizza alla home dell'inventario dopo il login
+LOGOUT_REDIRECT_URL = 'login' # Reindirizza alla pagina di login dopo il logout
+
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # Per testare email in console

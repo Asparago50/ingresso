@@ -1,240 +1,194 @@
 # EntrataMerci/app/inventory/views.py
-from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView # Assicurati che ListView sia importato
-from django.shortcuts import render, redirect
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView # Aggiunto DetailView se lo usi
+from django.http import HttpResponse # Per export_data se restituisce direttamente
+
+# --- IMPORT PER AUTENTICAZIONE E PERMESSI ---
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.contrib.auth.decorators import login_required, permission_required # <<< ASSICURATI CHE CI SIA QUESTA RIGA COMPLETA
+
+# --- I tuoi modelli e form ---
+from .models import Articolo, Deposito, Posizione # Importa tutti i modelli che gestisci con le viste
+from .forms import (
+    ArticoloForm, DepositoForm, PosizioneForm,
+    ArticoloImportForm, # Assumendo che tu abbia form di import specifici
+    # Altri form se necessario
+)
+from .resources import ArticoloResource # Per django-import-export
+
+# Helper per django-import-export (se usi la vista custom come nel tuo codice)
+from tablib import Dataset
 from django.contrib import messages
-# from tablib import Dataset # Se lo usi per import/export, altrimenti non serve qui
-import pandas as pd
-import os
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 
-from .models import Articolo
-from .forms import ArticoloForm, ArticoloImportForm
-from .resources import ArticoloResource, excel_date_to_datetime # Assicurati che excel_date_to_datetime sia definita o importata correttamente
+# Esempio Viste per ARTICOLO
+# ===========================
 
-# Class-Based Views per CRUD base
-# class ArticoloListView(ListView): # <--- QUESTA È LA CLASSE CHE MANCAVA O ERA SBAGLIATA 
-
-class InventoryListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+class ArticoloListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = Articolo
-    template_name = 'inventory/list.html'
+    template_name = 'inventory/list.html' # Assicurati che esista o adatta al tuo 'inventory/articolo_list.html'
     context_object_name = 'articoli'
-    paginate_by = 20
-    ordering = ['-numero_sequenziale']
+    permission_required = 'inventory.view_articolo'
 
-# class ArticoloCreateView(CreateView):
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['model_name'] = 'Articolo'
+        context['model_name_plural'] = 'Articoli'
+        context['create_url_name'] = 'inventory:articolo_create' # Aggiungi questo
+        return context
 
-class InventoryCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+class ArticoloCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
     model = Articolo
     form_class = ArticoloForm
-    template_name = 'inventory/form.html'
-    success_url = reverse_lazy('inventory:lista')
+    template_name = 'inventory/form.html' # Assicurati che esista o adatta al tuo 'inventory/articolo_form.html'
+    success_url = reverse_lazy('inventory:articolo_list')
+    permission_required = 'inventory.add_articolo'
 
-    def form_valid(self, form):
-        messages.success(self.request, "Articolo creato con successo!")
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form_title'] = 'Crea Nuovo Articolo'
+        return context
 
 class ArticoloUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
     model = Articolo
     form_class = ArticoloForm
     template_name = 'inventory/form.html'
-    success_url = reverse_lazy('inventory:lista')
+    success_url = reverse_lazy('inventory:articolo_list')
+    permission_required = 'inventory.change_articolo'
 
-    def form_valid(self, form):
-        messages.success(self.request, "Articolo aggiornato con successo!")
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form_title'] = f'Modifica Articolo: {self.object.nome_articolo}' # Adatta al campo nome
+        return context
 
-# Viste per import/export (come le avevamo definite)
-# Esempio per una Function-Based View (come import/export se sono FBV)
+class ArticoloDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = Articolo
+    template_name = 'inventory/confirm_delete.html' # Crea questo template
+    success_url = reverse_lazy('inventory:articolo_list')
+    permission_required = 'inventory.delete_articolo'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['item_to_delete'] = self.object
+        return context
+
+# Dovrai creare viste simili (ListView, CreateView, UpdateView, DeleteView)
+# per i modelli DEPOSITO e POSIZIONE, ognuna con i permessi appropriati:
+# Esempio per DepositoListView:
+# class DepositoListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+#     model = Deposito
+#     permission_required = 'inventory.view_deposito'
+#     # ... etc ...
+
+# Viste per IMPORT/EXPORT
+# =======================
+# La tua vista import_articoli sembra corretta con django-import-export,
+# dobbiamo solo aggiungere i decoratori.
+
 @login_required
-@permission_required('inventory.add_articolo', raise_exception=True) # O il permesso più appropriat
-def upload_file_view(request):
+@permission_required('inventory.add_articolo', raise_exception=True) # O 'inventory.change_articolo' se l'import può aggiornare
+def import_articoli(request): # Rinominata per chiarezza, prima era import_data
     if request.method == 'POST':
         form = ArticoloImportForm(request.POST, request.FILES)
         if form.is_valid():
-            uploaded_file = request.FILES['file_upload']
-            
-            fs_path = os.path.join(settings.MEDIA_ROOT, 'temp_uploads')
-            os.makedirs(fs_path, exist_ok=True) # Assicura che la directory esista
-            fs = FileSystemStorage(location=fs_path)
-            filename = fs.save(uploaded_file.name, uploaded_file)
-            uploaded_file_path = fs.path(filename)
-
+            articolo_resource = ArticoloResource()
+            dataset = Dataset()
             try:
-                if filename.endswith('.xlsx'):
-                    df_preview = pd.read_excel(uploaded_file_path, nrows=5)
-                elif filename.endswith('.csv'):
-                    df_preview = pd.read_csv(uploaded_file_path, nrows=5)
+                new_articoli = request.FILES['file']
+                # Controlla l'estensione del file
+                if not new_articoli.name.endswith(('.xls', '.xlsx', '.csv')):
+                    messages.error(request, 'Formato file non supportato. Usa .xls, .xlsx o .csv')
+                    return render(request, 'inventory/form_import.html', {'form': form, 'model_name_plural': 'Articoli'})
+
+                if new_articoli.name.endswith('.csv'):
+                    imported_data = dataset.load(new_articoli.read().decode('utf-8'), format='csv')
+                else: # Assume .xls o .xlsx
+                    imported_data = dataset.load(new_articoli.read(), format='xlsx')
+
+                # Qui puoi mappare le colonne se necessario, come nel tuo codice originale
+                # Esempio base (assicurati che i nomi delle colonne nel file corrispondano ai campi del modello):
+                # result = articolo_resource.import_data(dataset, dry_run=True, collect_failed_rows=True)
+
+                # Mappatura colonne come nel tuo esempio precedente:
+                column_map = {
+                    'Numero Sequenziale': 'numero_sequenziale',
+                    'Nome Articolo': 'nome_articolo',
+                    'Descrizione': 'descrizione',
+                    'Tipologia Articolo': 'tipologia_articolo',
+                    'Unità di Misura': 'unita_di_misura',
+                    'Prezzo Unitario': 'prezzo_unitario',
+                    'Quantità': 'quantita',
+                    'Data di Inserimento': 'data_inserimento',
+                    'Data Ultima Modifica': 'data_ultima_modifica',
+                    'Deposito': 'deposito',
+                    'Posizione': 'posizione',
+                }
+                # Ricrea il dataset con gli header corretti per il modello
+                mapped_dataset = Dataset()
+                mapped_dataset.headers = [column_map.get(h, h) for h in imported_data.headers] # Mappa gli header
+                for row in imported_data:
+                    mapped_dataset.append(row)
+
+                result = articolo_resource.import_data(mapped_dataset, dry_run=True, collect_failed_rows=True)
+
+
+                if not result.has_errors() and not result.has_validation_errors():
+                    articolo_resource.import_data(mapped_dataset, dry_run=False)
+                    messages.success(request, 'Dati importati con successo!')
+                    return redirect('inventory:articolo_list') # O dove vuoi reindirizzare
                 else:
-                    messages.error(request, "Formato file non supportato. Usa .xlsx o .csv.")
-                    fs.delete(filename)
-                    return redirect('inventory:upload_file')
-                
-                file_columns = list(df_preview.columns)
-                request.session['uploaded_file_path'] = uploaded_file_path
-                request.session['file_columns'] = file_columns
-                return redirect('inventory:map_columns')
+                    # Gestisci errori e righe fallite
+                    error_html = "Errori durante l'importazione:<br>"
+                    if result.has_errors():
+                        for error in result.base_errors:
+                            error_html += f"Errore generale: {error.error}<br>"
+                        for row_num, row_errors in result.row_errors():
+                            for error in row_errors:
+                                error_html += f"Riga {row_num + 1}: Campo '{error.field_name}' - {error.error_message}<br>"
+
+                    if result.has_validation_errors():
+                         for invalid_row in result.invalid_rows:
+                            error_html += f"Riga {invalid_row.number +1 } ({invalid_row.error_dict}): {invalid_row.error_message}<br>"
+                    
+                    messages.error(request, error_html, extra_tags='safe')
 
             except Exception as e:
-                messages.error(request, f"Errore durante la lettura del file: {e}")
-                if fs.exists(filename): # Controlla se il file esiste prima di cancellare
-                    fs.delete(filename)
-                return redirect('inventory:upload_file')
+                messages.error(request, f"Si è verificato un errore imprevisto: {e}")
     else:
         form = ArticoloImportForm()
-    return render(request, 'inventory/form_import.html', {'form': form, 'title': 'Passo 1: Carica File per Importazione'})
-
-@login_required
-@permission_required('inventory.view_articolo', raise_exception=True) # O il permesso più appropriato
-def get_articolo_model_fields(): # Spostata qui o importata se è in utils.py
-    # Escludi campi auto-creati, relazioni dirette e campi non editabili come 'conta_arrivi'
-    excluded_fields = {'numero_sequenziale', 'id', 'conta_arrivi'} # Aggiungi altri campi da escludere dalla mappatura manuale
-    return [
-        f.name for f in Articolo._meta.get_fields() 
-        if not f.auto_created and not f.is_relation and f.name not in excluded_fields
-    ]
-
-@login_required
-@permission_required('inventory.view_articolo', raise_exception=True) # O il permesso più appropriato
-def map_columns_view(request):
-    uploaded_file_path = request.session.get('uploaded_file_path')
-    file_columns = request.session.get('file_columns')
-
-    if not uploaded_file_path or not file_columns:
-        messages.error(request, "Nessun file caricato o colonne non trovate. Riprova.")
-        return redirect('inventory:upload_file')
-
-    model_fields = get_articolo_model_fields()
-
-    if request.method == 'POST':
-        mapping = {}
-        for model_field in model_fields:
-            selected_file_column = request.POST.get(f'map_{model_field}')
-            if selected_file_column and selected_file_column != "IGNORE":
-                mapping[model_field] = selected_file_column
-        
-        if not mapping:
-            messages.error(request, "Nessuna colonna mappata. Seleziona almeno una mappatura.")
-            # Rirenderizza la pagina di mappatura passando di nuovo i contesti
-            return render(request, 'inventory/map_columns.html', {
-                'file_columns': file_columns,
-                'model_fields': model_fields,
-                'title': 'Passo 2: Mappa Colonne'
-            })
-
-        request.session['column_mapping'] = mapping
-        return redirect('inventory:process_import')
-
-    return render(request, 'inventory/map_columns.html', {
-        'file_columns': file_columns,
-        'model_fields': model_fields,
-        'title': 'Passo 2: Mappa Colonne'
+    return render(request, 'inventory/form_import.html', {
+        'form': form,
+        'model_name_plural': 'Articoli',
+        'page_title': 'Importa Articoli'
     })
 
-@login_required
-@permission_required('inventory.view_articolo', raise_exception=True) # O il permesso più appropriato
-def process_import_view(request):
-    uploaded_file_path = request.session.get('uploaded_file_path')
-    mapping = request.session.get('column_mapping')
-
-    if not uploaded_file_path or not mapping:
-        messages.error(request, "Dati di importazione mancanti (file o mappatura). Riprova.")
-        return redirect('inventory:upload_file')
-
-    try:
-        filename = os.path.basename(uploaded_file_path)
-        if filename.endswith('.xlsx'):
-            df = pd.read_excel(uploaded_file_path)
-        elif filename.endswith('.csv'):
-            df = pd.read_csv(uploaded_file_path)
-        else:
-            raise ValueError("Formato file non supportato.")
-
-        articoli_creati = 0
-        errori_riga = []
-
-        for index, row_data_series in df.iterrows(): # row è una Series di Pandas
-            data_to_save = {}
-            valid_row = True
-            
-            # Applica la mappatura e le conversioni
-            for model_field, file_column_name in mapping.items():
-                if file_column_name in row_data_series and pd.notna(row_data_series[file_column_name]):
-                    val = row_data_series[file_column_name]
-                    
-                    # Conversioni specifiche per campo
-                    if model_field == 'attivo':
-                        val_attivo = str(val).strip().upper()
-                        if val_attivo in ['SI', 'TRUE', '1', 'T']: data_to_save[model_field] = True
-                        elif val_attivo in ['NO', 'FALSE', '0', 'F']: data_to_save[model_field] = False
-                        else: data_to_save[model_field] = None # o default, o errore
-                    elif model_field == 'data_conferimento':
-                        dt_obj = excel_date_to_datetime(val) # Usa la tua funzione
-                        if dt_obj: data_to_save[model_field] = dt_obj.date()
-                        else:
-                            messages.warning(request, f"Riga {index+2}: Formato data non valido per '{val}'.")
-                            valid_row = False
-                    elif model_field in ['pezzatura', 'giacenza', 'quantita_conferita']:
-                        try:
-                            # Rimuovi eventuali simboli di valuta o separatori migliaia se presenti
-                            cleaned_val = str(val).replace('€', '').replace('.', '').replace(',', '.').strip()
-                            data_to_save[model_field] = float(cleaned_val)
-                        except ValueError:
-                            messages.warning(request, f"Riga {index+2}: Valore non numerico per '{model_field}': {val}.")
-                            valid_row = False
-                    else: # Altri campi stringa
-                        data_to_save[model_field] = str(val).strip()
-                # else: se la colonna mappata non c'è o è vuota, non la includiamo in data_to_save,
-                # il modello userà i suoi default (es. blank=True, null=True o default=...)
-
-            if not valid_row or not data_to_save:
-                if not data_to_save and valid_row: pass # riga vuota basata su mappatura, ignora
-                else: errori_riga.append(f"Riga {index+2}: Dati non validi o mancanti, saltata.")
-                continue
-
-            try:
-                articolo = Articolo(**data_to_save)
-                articolo.full_clean() 
-                articolo.save()       
-                articoli_creati += 1
-            except Exception as e: 
-                errori_riga.append(f"Riga {index+2} (dati: {data_to_save}): Errore - {e}")
-        
-        fs_path = os.path.join(settings.MEDIA_ROOT, 'temp_uploads')
-        fs = FileSystemStorage(location=fs_path)
-        if fs.exists(os.path.basename(uploaded_file_path)):
-            fs.delete(os.path.basename(uploaded_file_path))
-        
-        for key in ['uploaded_file_path', 'file_columns', 'column_mapping']:
-            if key in request.session: del request.session[key]
-
-        summary_message_html = f"Importazione terminata. Articoli creati: {articoli_creati}."
-        if errori_riga:
-            summary_message_html += "<br>Errori riscontrati:<ul>" + "".join(f"<li>{err}</li>" for err in errori_riga) + "</ul>"
-            messages.warning(request, summary_message_html, extra_tags='safe') # Usa extra_tags='safe'
-        else:
-            messages.success(request, summary_message_html)
-            
-        return redirect('inventory:lista')
-
-    except Exception as e:
-        messages.error(request, f"Errore critico durante il processo di importazione: {e}")
-        for key in ['uploaded_file_path', 'file_columns', 'column_mapping']:
-            if key in request.session: del request.session[key]
-        return redirect('inventory:upload_file')
 
 @login_required
-@permission_required('inventory.view_articolo', raise_exception=True) # O il permesso più appropriato
-def export_articoli(request):
-    # ... (come prima) ...
+@permission_required('inventory.view_articolo', raise_exception=True) # Solo chi può vedere può esportare
+def export_articoli(request): # Rinominata per chiarezza
     articolo_resource = ArticoloResource()
-    dataset = articolo_resource.export(Articolo.objects.all())
-    from django.http import HttpResponse
-    response_format = 'xlsx' 
-    file_content = dataset.xlsx
-    response = HttpResponse(file_content, content_type=f'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="articoli_export.{response_format}"'
-    # messages.success(request, "Esportazione completata.") # Il messaggio qui potrebbe non essere visto se il file viene scaricato subito
+    dataset = articolo_resource.export()
+    response = HttpResponse(dataset.xlsx, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="articoli.xlsx"'
     return response
+
+# Se hai import/export per Deposito e Posizione, crea viste simili
+# (es. import_depositi, export_depositi) con i permessi corretti.
+
+# La tua vista home, se la mantieni:
+@login_required # Tutti devono essere loggati per vedere la home
+def home_inventory(request): # Rinominata per evitare conflitti con 'home' di Django
+    # ... logica per la tua home dell'inventario ...
+    # Ad esempio, mostrare gli ultimi articoli o statistiche
+    ultimi_articoli = Articolo.objects.order_by('-data_ultima_modifica')[:5]
+    numero_articoli = Articolo.objects.count()
+    numero_depositi = Deposito.objects.count()
+
+    context = {
+        'ultimi_articoli': ultimi_articoli,
+        'numero_articoli': numero_articoli,
+        'numero_depositi': numero_depositi,
+        'page_title': 'Dashboard Inventario'
+    }
+    return render(request, 'inventory/home_inventory.html', context) # Crea questo template

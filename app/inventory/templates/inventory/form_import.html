@@ -1,13 +1,23 @@
-{% extends "base.html" %}
+<!-- EntrataMerci/app/inventory/templates/inventory/form_import.html -->
+{% extends "base_app_inventory_templates.html" %} <!-- O "base.html" -->
+{% load crispy_forms_tags %}
 
-{% block title %}{{ title|default:"Importa" }} - {{ block.super }}{% endblock %}
-{% block page_title %}{{ title|default:"Importa Articoli" }}{% endblock %}
+{% block title %}{{ page_title|default:"Importa Dati" }}{% endblock %}
 
 {% block content %}
-  <form method="post" enctype="multipart/form-data" class="form-container">
+<h1>{{ page_title|default:"Importa Dati" }}</h1>
+<p>Carica un file (.xls, .xlsx, .csv) per importare {{ model_name_plural|lower|default:"elementi" }}.</p>
+<p>Assicurati che le intestazioni delle colonne nel file corrispondano ai campi del modello o alla mappatura attesa.</p>
+<!-- Qui potresti elencare gli header attesi se hai una mappatura fissa -->
+
+<form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn-primary">Importa File</button>
-    <a class.btn.btn-secondary href="{% url 'inventory:lista' %}">Annulla</a>
-  </form>
+    {{ form|crispy }}
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> Importa File</button>
+        <a href="{% if model_name_plural == 'Articoli' %}{% url 'inventory:articolo_list' %}{% endif %}" class="btn btn-secondary"> <!-- Adatta per altri modelli -->
+            Annulla
+        </a>
+    </div>
+</form>
 {% endblock %}

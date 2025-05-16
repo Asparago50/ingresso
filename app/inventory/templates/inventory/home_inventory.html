@@ -1,0 +1,92 @@
+<!-- EntrataMerci/app/inventory/templates/inventory/home_inventory.html -->
+{% extends "base_app_inventory_templates.html" %} <!-- O "base.html" -->
+
+{% block title %}{{ page_title|default:"Dashboard" }}{% endblock %}
+
+{% block content %}
+<div class="pagetitle">
+  <h1>{{ page_title|default:"Dashboard" }}</h1>
+  <nav>
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'inventory:home_inventory' %}">Home</a></li>
+      <li class="breadcrumb-item active">Dashboard</li>
+    </ol>
+  </nav>
+</div><!-- End Page Title -->
+
+<section class="section dashboard">
+  <div class="row">
+
+    <!-- Card Articoli -->
+    <div class="col-xxl-4 col-md-6">
+      <div class="card info-card sales-card">
+        <div class="card-body">
+          <h5 class="card-title">Articoli <span>| Totali</span></h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-box"></i>
+            </div>
+            <div class="ps-3">
+              <h6>{{ numero_articoli|default:0 }}</h6>
+              <span class="text-muted small pt-2 ps-1">articoli registrati</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- End Card Articoli -->
+
+    <!-- Card Depositi -->
+    <div class="col-xxl-4 col-md-6">
+      <div class="card info-card revenue-card">
+        <div class="card-body">
+          <h5 class="card-title">Depositi <span>| Totali</span></h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-archive"></i>
+            </div>
+            <div class="ps-3">
+              <h6>{{ numero_depositi|default:0 }}</h6>
+               <span class="text-muted small pt-2 ps-1">depositi configurati</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- End Card Depositi -->
+
+    <!-- Potresti aggiungere altre card qui (es. Posizioni, valore inventario, ecc.) -->
+
+  </div>
+
+  {% if ultimi_articoli %}
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Ultimi Articoli Modificati</h5>
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th scope="col">Nome Articolo</th>
+                <th scope="col">Quantità</th>
+                <th scope="col">Deposito</th>
+                <th scope="col">Data Modifica</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for articolo in ultimi_articoli %}
+              <tr>
+                <td>{{ articolo.nome_articolo }}</td>
+                <td>{{ articolo.quantita }} {{ articolo.get_unita_di_misura_display }}</td>
+                <td>{{ articolo.deposito.nome_deposito|default:"N/D" }}</td>
+                <td>{{ articolo.data_ultima_modifica|date:"d/m/Y H:i" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
