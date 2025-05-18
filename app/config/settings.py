@@ -16,6 +16,8 @@ ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_string.split(',') if hos
 
 # Application definition
 INSTALLED_APPS = [
+    'crispy_forms',          # <<<< AGGIUNGI QUESTA SE MANCA
+    'crispy_bootstrap5',     # <<<< AGGIUNGI QUESTA (o il tuo template pack)    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -136,3 +138,5 @@ LOGIN_REDIRECT_URL = 'inventory:home_inventory' # Reindirizza alla home dell'inv
 LOGOUT_REDIRECT_URL = 'login' # Reindirizza alla pagina di login dopo il logout
 
 #EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # Per testare email in console
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
