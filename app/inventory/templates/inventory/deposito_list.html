@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title|default:"Elenco Depositi" }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>{{ page_title|default:"Elenco Depositi" }}</h1>
+    {% if perms.inventory.add_deposito %}
+        <a href="{% url create_url_name %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuovo Deposito
+        </a>
+    {% endif %}
+</div>
+
+{% if depositi %} <!-- object_list è il default, ma abbiamo usato 'depositi' in context -->
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nome Deposito</th>
+                <th>Indirizzo</th>
+                <th>Azioni</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for deposito in depositi %}
+            <tr>
+                <td>{{ deposito.id }}</td>
+                <td>{{ deposito.nome_deposito }}</td>
+                <td>{{ deposito.indirizzo|default:"N/D"|linebreaksbr }}</td>
+                <td>
+                    {% if perms.inventory.change_deposito %}
+                    <a href="{% url 'inventory:deposito_update' deposito.pk %}" class="btn btn-sm btn-outline-warning me-1" title="Modifica"><i class="bi bi-pencil-square"></i></a>
+                    {% endif %}
+                    {% if perms.inventory.delete_deposito %}
+                    <a href="{% url 'inventory:deposito_delete' deposito.pk %}" class="btn btn-sm btn-outline-danger" title="Elimina"><i class="bi bi-trash"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+    {% include "inventory/includes/pagination.html" %} <!-- Includi paginazione generica -->
+{% else %}
+<div class="alert alert-info mt-3">Nessun deposito trovato.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ page_title|default:"Importa Dati" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h3>{{ page_title|default:"Importa Dati" }}</h3>
+                </div>
+                <div class="card-body">
+                    <p>Carica un file (.xls, .xlsx, .csv) per importare {{ model_name_plural|lower|default:"elementi" }}.</p>
+                    <p>Assicurati che le intestazioni delle colonne nel file corrispondano ai campi del modello.</p>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-cloud-upload"></i> Importa File
+                            </button>
+                            {% if list_url_name %}
+                            <a href="{% url list_url_name %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Annulla
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

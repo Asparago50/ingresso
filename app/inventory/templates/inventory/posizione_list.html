@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title|default:"Elenco Posizioni" }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>{{ page_title|default:"Elenco Posizioni" }}</h1>
+    {% if perms.inventory.add_posizione %}
+        <a href="{% url create_url_name %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nuova Posizione
+        </a>
+    {% endif %}
+</div>
+
+{% if posizioni %} <!-- object_list è il default, ma abbiamo usato 'posizioni' in context -->
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Nome Posizione</th>
+                <th>Deposito Associato</th>
+                <th>Azioni</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for posizione in posizioni %}
+            <tr>
+                <td>{{ posizione.id }}</td>
+                <td>{{ posizione.nome_posizione }}</td>
+                <td>{{ posizione.deposito.nome_deposito }}</td>
+                <td>
+                    {% if perms.inventory.change_posizione %}
+                    <a href="{% url 'inventory:posizione_update' posizione.pk %}" class="btn btn-sm btn-outline-warning me-1" title="Modifica"><i class="bi bi-pencil-square"></i></a>
+                    {% endif %}
+                    {% if perms.inventory.delete_posizione %}
+                    <a href="{% url 'inventory:posizione_delete' posizione.pk %}" class="btn btn-sm btn-outline-danger" title="Elimina"><i class="bi bi-trash"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+    {% include "inventory/includes/pagination.html" %} <!-- Includi paginazione generica -->
+{% else %}
+<div class="alert alert-info mt-3">Nessuna posizione trovata.</div>
+{% endif %}
+{% endblock %}
