@@ -16,15 +16,15 @@ ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_string.split(',') if hos
 
 # Application definition
 INSTALLED_APPS = [
-    'crispy_forms',          # <<<< AGGIUNGI QUESTA SE MANCA
-    'crispy_bootstrap5',     # <<<< AGGIUNGI QUESTA (o il tuo template pack)    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'import_export', # Per django-import-export
+    'import_export',
+    'crispy_forms',
+    'crispy_bootstrap5',
     'inventory.apps.InventoryConfig', # Modo esplicito di registrare la tua app
 ]
 
