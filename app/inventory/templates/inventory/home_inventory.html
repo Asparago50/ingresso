@@ -1,5 +1,4 @@
-<!-- EntrataMerci/app/inventory/templates/inventory/home_inventory.html -->
-{% extends "base.html" %} <!-- O "base.html" -->
+{% extends "base.html" %}
 
 {% block title %}{{ page_title|default:"Dashboard" }}{% endblock %}
 
@@ -18,26 +17,31 @@
   <div class="row">
 
     <!-- Card Articoli -->
-    <div class="col-xxl-4 col-md-6">
-      <div class="card info-card sales-card">
+    <div class="col-lg-3 col-md-6"> <!-- Modificato col-xxl-4 a col-lg-3 per fare spazio a più card -->
+      <div class="card info-card sales-card h-100"> <!-- Aggiunto h-100 per altezza uguale se possibile -->
         <div class="card-body">
           <h5 class="card-title">Articoli <span>| Totali</span></h5>
           <div class="d-flex align-items-center">
             <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-              <i class="bi bi-box"></i>
+              <i class="bi bi-box-seam"></i> <!-- Icona aggiornata per articoli -->
             </div>
             <div class="ps-3">
               <h6>{{ numero_articoli|default:0 }}</h6>
               <span class="text-muted small pt-2 ps-1">articoli registrati</span>
             </div>
           </div>
+          {% if perms.inventory.view_articolo %}
+          <div class="mt-3">
+             <a href="{% url 'inventory:articolo_list' %}" class="btn btn-sm btn-outline-primary w-100">Vedi Elenco</a>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div><!-- End Card Articoli -->
 
     <!-- Card Depositi -->
-    <div class="col-xxl-4 col-md-6">
-      <div class="card info-card revenue-card">
+    <div class="col-lg-3 col-md-6">
+      <div class="card info-card revenue-card h-100"> <!-- Aggiunto h-100 -->
         <div class="card-body">
           <h5 class="card-title">Depositi <span>| Totali</span></h5>
           <div class="d-flex align-items-center">
@@ -49,35 +53,94 @@
                <span class="text-muted small pt-2 ps-1">depositi configurati</span>
             </div>
           </div>
+           {% if perms.inventory.view_deposito %} <!-- Assumendo tu abbia viste per depositi -->
+           <div class="mt-3">
+              <a href="#" class="btn btn-sm btn-outline-success w-100 disabled">Vedi Elenco</a> <!-- Sostituisci '#' con {% url 'inventory:deposito_list' %} quando la vista esiste -->
+           </div>
+           {% endif %}
         </div>
       </div>
     </div><!-- End Card Depositi -->
 
-    <!-- Potresti aggiungere altre card qui (es. Posizioni, valore inventario, ecc.) -->
+    <!-- Card Posizioni -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card info-card customers-card h-100"> <!-- Aggiunto h-100 e customers-card per colore diverso -->
+        <div class="card-body">
+          <h5 class="card-title">Posizioni <span>| Totali</span></h5>
+          <div class="d-flex align-items-center">
+            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+              <i class="bi bi-geo-alt"></i> <!-- Icona per posizioni -->
+            </div>
+            <div class="ps-3">
+              <h6>{{ numero_posizioni|default:0 }}</h6>
+               <span class="text-muted small pt-2 ps-1">posizioni definite</span>
+            </div>
+          </div>
+          {% if perms.inventory.view_posizione %} <!-- Assumendo tu abbia viste per posizioni -->
+          <div class="mt-3">
+             <a href="#" class="btn btn-sm btn-outline-info w-100 disabled">Vedi Elenco</a> <!-- Sostituisci '#' con {% url 'inventory:posizione_list' %} quando la vista esiste -->
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div><!-- End Card Posizioni -->
 
-  </div>
+    <!-- Card Azioni (Import/Export) -->
+    <div class="col-lg-3 col-md-6">
+      <div class="card info-card actions-card h-100"> <!-- Aggiunto h-100 e una classe custom per colore se vuoi -->
+        <div class="card-body">
+          <h5 class="card-title">Azioni <span>| Dati Articoli</span></h5>
+          <div class="list-group list-group-flush mt-3">
+            {% if perms.inventory.add_articolo %} <!-- O un permesso più specifico per l'importazione -->
+            <a href="{{ url_import_articoli }}" class="list-group-item list-group-item-action">
+              <i class="bi bi-cloud-upload me-2"></i>Importa Articoli
+            </a>
+            {% endif %}
+            {% if perms.inventory.view_articolo %} <!-- O un permesso più specifico per l'esportazione -->
+            <a href="{{ url_export_articoli }}" class="list-group-item list-group-item-action">
+              <i class="bi bi-cloud-download me-2"></i>Esporta Articoli
+            </a>
+            {% endif %}
+            <!-- Aggiungi link per import/export di Depositi e Posizioni se implementati -->
+            <!-- Esempio:
+            {% if perms.inventory.add_deposito %}
+            <a href="#" class="list-group-item list-group-item-action disabled">
+              <i class="bi bi-cloud-upload me-2"></i>Importa Depositi
+            </a>
+            {% endif %}
+            -->
+          </div>
+        </div>
+      </div>
+    </div><!-- End Card Azioni -->
+
+  </div> <!-- Fine della prima riga di card -->
 
   {% if ultimi_articoli %}
   <div class="row mt-4">
     <div class="col-12">
-      <div class="card">
+      <div class="card recent-sales overflow-auto"> <!-- Aggiunto recent-sales per stile simile a template admin -->
         <div class="card-body">
-          <h5 class="card-title">Ultimi Articoli Modificati</h5>
+          <h5 class="card-title">Ultimi Articoli Modificati <span>| Recenti</span></h5>
           <table class="table table-sm table-hover">
             <thead>
               <tr>
+                <th scope="col">#</th>
                 <th scope="col">Nome Articolo</th>
                 <th scope="col">Quantità</th>
                 <th scope="col">Deposito</th>
+                <th scope="col">Posizione</th>
                 <th scope="col">Data Modifica</th>
               </tr>
             </thead>
             <tbody>
               {% for articolo in ultimi_articoli %}
               <tr>
+                <th scope="row"><a href="#">{{ articolo.numero_sequenziale }}</a></th> <!-- Link a dettaglio articolo se esistente -->
                 <td>{{ articolo.nome_articolo }}</td>
                 <td>{{ articolo.quantita }} {{ articolo.get_unita_di_misura_display }}</td>
                 <td>{{ articolo.deposito.nome_deposito|default:"N/D" }}</td>
+                <td>{{ articolo.posizione.nome_posizione|default:"N/D" }}</td>
                 <td>{{ articolo.data_ultima_modifica|date:"d/m/Y H:i" }}</td>
               </tr>
               {% endfor %}

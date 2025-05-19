@@ -179,16 +179,20 @@ def export_articoli(request): # Rinominata per chiarezza
 # La tua vista home, se la mantieni:
 @login_required # Tutti devono essere loggati per vedere la home
 def home_inventory(request): # Rinominata per evitare conflitti con 'home' di Django
-    # ... logica per la tua home dell'inventario ...
-    # Ad esempio, mostrare gli ultimi articoli o statistiche
     ultimi_articoli = Articolo.objects.order_by('-data_ultima_modifica')[:5]
     numero_articoli = Articolo.objects.count()
     numero_depositi = Deposito.objects.count()
+    numero_posizioni = Posizione.objects.count()
+    url_import_articoli = reverse_lazy('inventory:articolo_import')
+    url_export_articoli = reverse_lazy('inventory:articolo_export')
 
     context = {
         'ultimi_articoli': ultimi_articoli,
         'numero_articoli': numero_articoli,
         'numero_depositi': numero_depositi,
+        'numero_posizioni': numero_posizioni, # <<<< PASSATO AL CONTESTO
+        'url_import_articoli': url_import_articoli,
+        'url_export_articoli': url_export_articoli,
         'page_title': 'Dashboard Inventario'
     }
     return render(request, 'inventory/home_inventory.html', context) # Crea questo template
