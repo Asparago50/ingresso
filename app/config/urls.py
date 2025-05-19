@@ -1,35 +1,31 @@
-from django.contrib import admin
-from django.urls import path, include
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('inventory.urls')),    # tutte le view di inventory
-]
     # EntrataMerci/app/config/urls.py
 from django.contrib import admin
 from django.urls import path, include
-from django.contrib.auth import views as auth_views # <<<< IMPORTA QUESTO
+from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.shortcuts import redirect # <<<< Importa redirect
+from inventory import views as inventory_views # <<<< Importa le viste di inventory
+
+# Una vista semplice per reindirizzare o mostrare qualcosa
+def root_redirect_view(request):
+    if request.user.is_authenticated:
+        return redirect('inventory:home_inventory') # Nome della tua URL per la dashboard inventario
+    return redirect('login') # Nome della tua URL per il login
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('inventory/', include('inventory.urls')), # Le URL della tua app inventario
 
-    # URLs per l'autenticazione
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'), # <<<< AGGIUNGI QUESTA
-    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'), # <<<< AGGIUNGI QUESTA
+    # path('', inventory_views.home_inventory, name='home_root'), # Opzione se vuoi usare la dashboard come root
+    path('', root_redirect_view, name='home_root'), # <<<< AGGIUNGI QUESTA PER LA ROOT
 
-    # Include le URL della tua app 'inventory'
-    path('inventory/', include('inventory.urls')), # Aggiunto prefisso 'inventory/' per chiarezza
-                                                # Se preferisci alla root, lascia '' come prima
-
-    # Eventuale URL radice se non gestita da inventory.urls
-    # path('', una_tua_vista_home_generale, name='home_sito'), # Se inventory non è alla root
+    # Media files (mantenuto per completezza, ma la gestione statica/media in prod è diversa)
+    # path('^media/(?P<path>.*)$', ... ) # Questa sintassi è per re_path, non path
 ]
 
-# Per servire media files e static files durante lo sviluppo (DEBUG=True)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    # La riga sotto per static files è spesso gestita da Django stesso in dev,
-    # ma non fa male esplicitarla se usi `collectstatic` anche in dev.
-    # urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) # Questa è opzionale in dev con runserver
