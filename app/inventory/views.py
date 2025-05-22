@@ -15,6 +15,9 @@ from .forms import (
 from .resources import ArticoloResource
 
 from tablib import Dataset
+        context['model_name_plural'] = 'Depositi'
+        context['create_url_name'] = 'inventory:deposito_create'
+        context['page_title'] = 'Elenco Depositi'
 from django.contrib import messages
 
 # --- Viste ARTICOLO (come definite precedentemente) ---
